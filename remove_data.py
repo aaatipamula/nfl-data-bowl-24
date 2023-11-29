@@ -1,50 +1,66 @@
 import pandas as pd
 import os
+import re
+import sys
 
-game_and_play = []
-with open('remove_second.txt') as f:
-    for line in f:
-        line = line.split(',')
-        game_and_play.append((int(line[0]), int(line[1])))
-print(len(game_and_play))
-game_and_play_copy = game_and_play.copy()
+from tqdm import tqdm
 
-def old_clean():
-    for file_name in os.listdir(".\\original_data"):
-        if file_name.startswith("tracking_week"):
-            df = pd.read_csv(".\\original_data\\" + file_name)
-            curr_size = df.size
-            pop_list = []
-            for index, row in (df.iterrows()):
-                info = (row['gameId'], row['playId'])
-                if info in game_and_play:
-                    try:
-                        game_and_play_copy.remove(info)
-                    except:
-                        pass
-                    pop_list.append(index)
-            df = df.drop(pop_list)
-            print(file_name, curr_size - df.size)
-            df.to_csv('clean' + file_name)
+def validate_args(args) -> tuple[str, str, str]:
+    if len(args) > 3:
+        print("Too many args provided.")
+        exit(1)
+    if len(args) < 2:
+        print("Too few args provided.")
+        exit(1)
+    if not os.path.isdir(args[0]):
+        print("Not a valid search directory.")
+        exit(1)
+    if not os.path.isfile(args[1]):
+        print("Not a valid plays.csv file.")
+        exit(1)
+    if len(args) == 3:
+        return (os.path.abspath(args[0]), os.path.abspath(args[1]), args[2])
+    return (os.path.abspath(args[0]), os.path.abspath(args[1]), "^tracking_week")
 
-def new_clean():
+def gather_remove_data(filename: str) -> list[tuple[int, int]]:
+    game_and_play_ids = []
+    with open(filename) as f:
+        lineno = 1
+        for line in f:
+            line = line.split(',')
+            game_and_play_ids.append((int(line[0]), int(line[1])))
+    return game_and_play_ids
+
+def clean(remove_from: list[tuple[int, int]], search_dir: str, regex: str):
     weekno = 1
-    for file_name in os.listdir(".\\"):
-        if file_name.endswith(".csv"):
-            df = pd.read_csv(".\\" + file_name)
+    remove_from_copy = remove_from.copy()
+    file_regex = re.compile(regex)
+
+    for file_name in os.listdir(search_dir):
+        if file_regex.match(file_name):
+            file = os.path.join(search_dir, file_name)
+            print(f"Found file {file_name}")
+            df = pd.read_csv(file)
             curr_size = df.size
             pop_list = []
-            for index, row in (df.iterrows()):
+            for index, row in tqdm((df.iterrows())):
                 info = (row['gameId'], row['playId'])
-                if info in game_and_play:
+                if info in remove_from:
                     try:
-                        game_and_play_copy.remove(info)
+                        remove_from_copy.remove(info)
                     except:
                         pass
                     pop_list.append(index)
             df = df.drop(pop_list)
-            print(file_name, curr_size - df.size)
+            print("df size reduced by ", curr_size - df.size)
             df.to_csv(f'week_{weekno}.csv')
+            print(f"Written to week_{weekno}.csv\n")
             weekno += 1
-new_clean()
-print(len(game_and_play_copy))
+
+def main():
+    search_dir, remove_file, regex_pattern = validate_args(sys.argv[1::])
+    remove_data = gather_remove_data(remove_file)
+    clean(remove_data, search_dir, regex_pattern)
+
+if __name__ == "__main__":
+    main()
