@@ -122,36 +122,36 @@ def no_button_clicked(event):
     plt.close()
 
 
+for gameID in info:
+    for playID in range(5100):
+        a = train.query(f"gameId == {gameID} and playId == {playID}")
+        if a.empty:
+            continue
+        b = plays.query(f"gameId == {gameID} and playId == {playID}")['playDescription'].values[0]
+        fig, ax = create_football_field()
+        teams = get_teams(gameID, playID)
+        train.query(f"gameId == {gameID} and playId == {playID} and club == 'football'") \
+            .plot(x='x', y='y', kind='scatter', ax=ax, color='brown', s=30, label='Ball')
+        train.query(f"gameId == {gameID} and playId == {playID} and club == '{teams[1]}'") \
+            .plot(x='x', y='y', kind='scatter', ax=ax, color='white', s=5, label={teams[1]})
+        train.query(f"gameId == {gameID} and playId == {playID} and club == '{teams[0]}'") \
+            .plot(x='x', y='y', kind='scatter', ax=ax, color='blue', s=5, label={teams[0]})
+        
+        plt.title(f'Play #{playID} at Game #{gameID}\n{b}')
+        plt.legend(loc='center right', bbox_to_anchor=(1.09, .5))
+        
 
-for playID in range(5100):
-    a = train.query(f"gameId == {gameID} and playId == {playID}")
-    if a.empty:
-        continue
-    b = plays.query(f"gameId == {gameID} and playId == {playID}")['playDescription'].values[0]
-    fig, ax = create_football_field()
-    teams = get_teams(gameID, playID)
-    train.query(f"gameId == {gameID} and playId == {playID} and club == 'football'") \
-        .plot(x='x', y='y', kind='scatter', ax=ax, color='brown', s=30, label='Ball')
-    train.query(f"gameId == {gameID} and playId == {playID} and club == '{teams[1]}'") \
-        .plot(x='x', y='y', kind='scatter', ax=ax, color='white', s=5, label={teams[1]})
-    train.query(f"gameId == {gameID} and playId == {playID} and club == '{teams[0]}'") \
-        .plot(x='x', y='y', kind='scatter', ax=ax, color='blue', s=5, label={teams[0]})
-    
-    plt.title(f'Play #{playID} at Game #{gameID}\n{b}')
-    plt.legend(loc='center right', bbox_to_anchor=(1.09, .5))
-    
-
-    button_width, button_height = 0.1, 0.075  # You can adjust these as needed
-    ax_yes = plt.axes([.345, 0.05, button_width, button_height])
-    ax_no = plt.axes([.58, 0.05, button_width, button_height])
-    ax_maybe = plt.axes([.463, 0.05, button_width, button_height])
-    btn_yes = Button(ax_yes, 'Yes')
-    btn_no = Button(ax_no, 'No')
-    btn_maybe = Button(ax_maybe, 'Maybe')
-    btn_yes.on_clicked(yes_button_clicked)
-    btn_no.on_clicked(no_button_clicked)
-    btn_maybe.on_clicked(maybe_button_clicked)
+        button_width, button_height = 0.1, 0.075  # You can adjust these as needed
+        ax_yes = plt.axes([.345, 0.05, button_width, button_height])
+        ax_no = plt.axes([.58, 0.05, button_width, button_height])
+        ax_maybe = plt.axes([.463, 0.05, button_width, button_height])
+        btn_yes = Button(ax_yes, 'Yes')
+        btn_no = Button(ax_no, 'No')
+        btn_maybe = Button(ax_maybe, 'Maybe')
+        btn_yes.on_clicked(yes_button_clicked)
+        btn_no.on_clicked(no_button_clicked)
+        btn_maybe.on_clicked(maybe_button_clicked)
 
 
 
-    plt.show()
+        plt.show()
