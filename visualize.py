@@ -7,8 +7,16 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Button
 
-train = pd.read_csv('cleantracking_week_1.csv', low_memory=False)
+train = pd.read_csv('current_data/week_1.csv', low_memory=False)
 plays = pd.read_csv('plays.csv', low_memory=False)
+with open("current_data/games1.txt" , 'r') as f:
+    info = f.readlines()
+    info = [i.strip() for i in info]
+print(info)
+output_yes = 'yes.csv'
+output_maybe = 'maybe.csv'
+
+
 
 def create_football_field(linenumbers=True,
                           endzones=True,
@@ -91,16 +99,21 @@ def get_teams(gameId, playId):
     return home, away
 
 def yes_button_clicked(event):
-    global playID, gameID
+    global playID, gameID, output_yes
     # Log the gameId and playId
-    print(f"Logged: gameId={gameID}, playId={playID}")
+    with open("yes.txt", 'a') as f:
+        f.write(f"{gameID},{playID},\n")
+        # print(f"Logged: gameId={gameID}, playId={playID}")
+
     # Move to the next plot
     plt.close()
 
 def maybe_button_clicked(event):
     global playID, gameID
     # Log the gameId and playId
-    print(f"Logged: gameId={gameID}, playId={playID}")
+    # print(f"Logged: gameId={gameID}, playId={playID}")
+    with open("maybe.txt", 'a') as f:
+        f.write(f"{gameID},{playID},\n")
     # Move to the next plot
     plt.close()
 
@@ -108,7 +121,8 @@ def no_button_clicked(event):
     # Just close the current plot
     plt.close()
 
-gameID = 2022090800
+
+
 for playID in range(5100):
     a = train.query(f"gameId == {gameID} and playId == {playID}")
     if a.empty:
@@ -141,4 +155,3 @@ for playID in range(5100):
 
 
     plt.show()
-
